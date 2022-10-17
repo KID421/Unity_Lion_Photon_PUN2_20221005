@@ -56,6 +56,15 @@ namespace KID
             Jump();
         }
 
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (collision.name.Contains("烤雞"))
+            {
+                // 連線伺服器.刪除(碰到的物件)
+                PhotonNetwork.Destroy(collision.gameObject);
+            }
+        }
+
         [PunRPC]
         private void RPCUpdateName()
         {

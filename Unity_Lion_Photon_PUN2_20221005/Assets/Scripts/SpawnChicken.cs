@@ -1,4 +1,5 @@
 using UnityEngine;
+using Photon.Pun;
 
 namespace KID
 {
@@ -13,5 +14,16 @@ namespace KID
         private float intervalSpawn = 2.5f;
         [SerializeField, Header("¥Í¦¨ÂI")]
         private Transform[] spawnPoints;
+
+        private void Awake()
+        {
+            InvokeRepeating("Spawn", 0, intervalSpawn);
+        }
+
+        private void Spawn()
+        {
+            int random = Random.Range(0, spawnPoints.Length);
+            PhotonNetwork.Instantiate(prefabChicken.name, spawnPoints[random].position, Quaternion.identity);
+        }
     }
 }

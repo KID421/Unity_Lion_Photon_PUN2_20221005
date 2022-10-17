@@ -1,6 +1,5 @@
 using UnityEngine;
 using Photon.Pun;
-using TMPro;
 
 namespace KID
 {
@@ -24,7 +23,7 @@ namespace KID
         {
             Vector3 pos = Vector3.zero;
             pos.x = Random.Range(-5f, 5f);
-            pos.y = 6f;
+            pos.y = 3f;
             PhotonNetwork.Instantiate(prefabPlayer.name, pos, Quaternion.identity);
         }
     }
