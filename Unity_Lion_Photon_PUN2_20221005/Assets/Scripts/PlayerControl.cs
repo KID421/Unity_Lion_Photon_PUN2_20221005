@@ -2,6 +2,7 @@ using UnityEngine;
 using Photon.Pun;
 using TMPro;
 using Cinemachine;
+using UnityEngine.UI;
 
 namespace KID
 {
@@ -23,6 +24,12 @@ namespace KID
         private string parWalk = "開關走路";
         private bool isGround;
         private Transform childCanvas;
+        private TextMeshProUGUI textChicken;
+        private int countChicken;
+        private int countChickenMax = 10;
+        private CanvasGroup groupGame;
+        private TextMeshProUGUI textWinner;
+        private Button btnBackToLobby;
 
         private void OnDrawGizmos()
         {
@@ -34,7 +41,7 @@ namespace KID
         {
             rig = GetComponent<Rigidbody2D>();
             ani = GetComponent<Animator>();
-            
+
             // 取得第一個子物件
             childCanvas = transform.GetChild(0);
 
@@ -42,6 +49,20 @@ namespace KID
             if (!photonView.IsMine) enabled = false;
 
             photonView.RPC("RPCUpdateName", RpcTarget.All);
+
+            textChicken = transform.Find("畫布玩家名稱/烤雞數量").GetComponent<TextMeshProUGUI>();
+            groupGame = GameObject.Find("畫布遊戲介面").GetComponent<CanvasGroup>();
+            textWinner = GameObject.Find("勝利者").GetComponent<TextMeshProUGUI>();
+
+            btnBackToLobby = GameObject.Find("返回遊戲大廳").GetComponent<Button>();
+            btnBackToLobby.onClick.AddListener(() =>
+            {
+                if (photonView.IsMine)
+                {
+                    PhotonNetwork.LeaveRoom();
+                    PhotonNetwork.LoadLevel("遊戲大廳");
+                }
+            });
         }
 
         private void Start()
@@ -54,15 +75,57 @@ namespace KID
             CheckGround();
             Move();
             Jump();
+            BackToTop();
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
             if (collision.name.Contains("烤雞"))
             {
-                // 連線伺服器.刪除(碰到的物件)
-                PhotonNetwork.Destroy(collision.gameObject);
+                Destroy(collision.gameObject);
+
+                textChicken.text = (++countChicken).ToString();
+
+                if (countChicken >= countChickenMax) Win();
             }
+        }
+
+        /// <summary>
+        /// 回到場景上方
+        /// </summary>
+        private void BackToTop()
+        {
+            if (transform.position.y < -20)
+            {
+                rig.velocity = Vector3.zero;
+                transform.position = new Vector3(1.5f, 15, 0);
+            }
+        }
+
+        /// <summary>
+        /// 獲勝
+        /// </summary>
+        private void Win()
+        {
+            groupGame.alpha = 1;
+            groupGame.interactable = true;
+            groupGame.blocksRaycasts = true;
+
+            textWinner.text = "獲勝玩家：" + photonView.Owner.NickName;
+
+            DestroyObject();
+        }
+
+        /// <summary>
+        /// 刪除物件
+        /// </summary>
+        private void DestroyObject()
+        {
+            GameObject[] chickens = GameObject.FindGameObjectsWithTag("烤雞");
+
+            for (int i = 0; i < chickens.Length; i++) Destroy(chickens[i]);
+
+            Destroy(FindObjectOfType<SpawnChicken>().gameObject);
         }
 
         [PunRPC]
